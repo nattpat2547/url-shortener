@@ -50,13 +50,8 @@ api.post('/shorten', async (req, res) => {
     return res.status(400).json({ error: 'Invalid URL' });
   }
 
-  let code;
-
-  if (customCode) {
-    code = customCode.toLowerCase(); // 🔥 ใช้ customCode
-  } else {
-    code = randomCode(6).toLowerCase(); // 🔥 fallback
-  }
+  // ✅ FIX: รองรับทั้ง customCode + random
+  const code = (customCode || randomCode(6)).toLowerCase();
 
   await redis.set(code, url);
 
@@ -114,7 +109,7 @@ api.get('/info', (req, res) => {
 app.use('/api', api);
 app.use('/ui', express.static(path.join(__dirname, '../www')));
 
-// 🚀 Redirect (สำคัญสุด)
+// 🚀 Redirect
 app.get('/:code', async (req, res) => {
   const code = req.params.code;
 
@@ -125,7 +120,6 @@ app.get('/:code', async (req, res) => {
   }
 
   try {
-    // 🔥 กัน test crash
     if (typeof redis.incrementClick === 'function') {
       await redis.incrementClick(code);
     }
